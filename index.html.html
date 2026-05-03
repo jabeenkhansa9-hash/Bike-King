@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bike King | Dealership Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@700;800;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{--p:#00f5a0;--pd:#00c87a;--s:#f5a000;--ac:#a855f7;--bg:#07080f;--card:#161825;--card2:#1c1f30;--t:#e8eaf6;--t2:#8892b0;--red:#ff4757;--gold:#ffd700;}
+body{background:var(--bg);color:var(--t);font-family:Inter,sans-serif;height:100dvh;overflow:hidden;}
+.pg{display:none;position:fixed;inset:0;background:var(--bg);z-index:10;flex-direction:column;overflow-y:auto;}
+.pg.on{display:flex;}
+.btn{border:none;border-radius:14px;font-family:Rajdhani,sans-serif;font-weight:700;letter-spacing:1px;cursor:pointer;transition:transform .15s;width:100%;padding:14px;font-size:15px;}
+.btn:active{transform:scale(.95);}
+.btn-g{background:linear-gradient(135deg,var(--p),var(--pd));color:#000;}
+.btn-o{background:rgba(0,245,160,.08);color:var(--p);border:1px solid rgba(0,245,160,.25);}
+.btn-r{background:linear-gradient(135deg,#ff4757,#c0392b);color:#fff;}
+.btn-y{background:linear-gradient(135deg,var(--gold),#f39c12);color:#000;}
+.btn-sm{padding:8px 16px;width:auto;font-size:12px;}
+.card{background:var(--card);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:14px;}
+#hdr{position:fixed;top:0;left:0;right:0;z-index:100;height:50px;background:rgba(7,8,15,.97);border-bottom:1px solid rgba(0,245,160,.12);display:flex;align-items:center;justify-content:space-between;padding:0 12px;}
+#nav{position:fixed;bottom:0;left:0;right:0;z-index:100;height:54px;background:rgba(7,8,15,.98);border-top:1px solid rgba(255,255,255,.06);display:flex;}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border:none;background:none;color:var(--t2);cursor:pointer;gap:2px;font-family:Rajdhani,sans-serif;font-size:9px;font-weight:700;}
+.nb.on{color:var(--p);}
+.nb .ic{font-size:20px;}
+#game{display:none;flex-direction:column;padding-top:50px;padding-bottom:54px;height:100dvh;background:var(--bg);}
+#game.on{display:flex;}
+.tab{display:none!important;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.tab.on{display:block!important;}
+.tab.on#tab-fin{display:flex!important;flex-direction:column;}
+.tab.on#tab-upg{display:block!important;}
+.ov{display:none;position:fixed;inset:0;background:var(--bg);z-index:200;flex-direction:column;overflow-y:auto;}
+.ov.on{display:flex;}
+#toast{position:fixed;top:62px;left:50%;transform:translateX(-50%);z-index:9999;background:var(--card2);border:1px solid rgba(0,245,160,.3);border-radius:30px;padding:10px 20px;display:none;white-space:nowrap;max-width:92vw;font-family:Rajdhani,sans-serif;font-weight:600;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,.6);}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.col{display:flex;flex-direction:column;gap:8px;}
+.row{display:flex;align-items:center;gap:10px;}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0)translateX(-50%);}100%{opacity:0;transform:translateY(-70px)translateX(-50%);}}
+@keyframes stamp{0%{transform:translateX(-50%) rotate(-15deg) scale(0);}60%{transform:translateX(-50%) rotate(-15deg) scale(1.2);}100%{transform:translateX(-50%) rotate(-15deg) scale(1);}}
+.bounce{animation:bounce 2s infinite;}
+.glow{text-shadow:0 0 15px var(--p),0 0 30px rgba(0,245,160,.4);}
+input[type=number]{background:var(--card2);color:var(--t);border:1px solid rgba(255,255,255,.12);padding:10px;border-radius:10px;font-size:14px;width:100%;}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div class="pg on" id="pg-splash" style="align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#0a1a0a,#07080f);">
+  <div style="text-align:center;">
+    <div class="bounce" style="font-size:72px;margin-bottom:10px;filter:drop-shadow(0 0 20px rgba(0,245,160,.6));">🏍️</div>
+    <h1 class="glow" style="font-family:'Exo 2';font-size:46px;font-weight:900;color:var(--p);letter-spacing:4px;">BIKE KING</h1>
+    <p style="color:var(--t2);font-family:Rajdhani;font-size:13px;letter-spacing:3px;margin-top:4px;">DEALERSHIP SIMULATOR</p>
+    <div style="margin:28px auto 0;width:200px;height:3px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;">
+      <div id="load-bar" style="height:100%;width:0;background:linear-gradient(90deg,var(--p),var(--s));border-radius:3px;transition:width 2s ease;"></div>
+    </div>
+    <p id="load-txt" style="color:var(--t2);font-size:11px;margin-top:8px;font-family:Rajdhani;letter-spacing:2px;">LOADING...</p>
+  </div>
+</div>
+
+<!-- MAIN MENU -->
+<div class="pg" id="pg-menu" style="align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at top,#081408,#07080f);">
+  <div style="width:100%;max-width:380px;text-align:center;">
+    <div class="bounce" style="font-size:58px;margin-bottom:10px;filter:drop-shadow(0 0 20px rgba(0,245,160,.5));">🏍️</div>
+    <h1 class="glow" style="font-family:'Exo 2';font-size:38px;font-weight:900;color:var(--p);letter-spacing:3px;">BIKE KING</h1>
+    <p style="color:var(--t2);font-family:Rajdhani;font-size:11px;letter-spacing:3px;margin-bottom:24px;margin-top:4px;">BUILD YOUR DEALERSHIP EMPIRE</p>
+    <div class="col">
+      <button id="btn-resume" class="btn btn-y" onclick="resumeGame()" style="display:none;">▶ RESUME GAME</button>
+      <button class="btn btn-g" onclick="confirmNew()">🎮 NEW GAME</button>
+      <button class="btn btn-o" onclick="go('pg-howto')">📖 HOW TO PLAY</button>
+      <button class="btn btn-o" style="color:var(--t2);border-color:rgba(255,255,255,.1);" onclick="go('pg-settings')">⚙️ SETTINGS</button>
+    </div>
+    <div class="card" style="margin-top:16px;font-size:12px;font-family:Rajdhani;">
+      <div style="color:var(--t2);">🏆 BEST: Day <span id="sp-best">—</span></div>
+      <div id="sp-save" style="display:none;color:var(--p);margin-top:4px;">💾 Saved: Day <span id="sp-sday">—</span> · Rs.<span id="sp-scash">—</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW TO PLAY -->
+<div class="pg" id="pg-howto" style="padding:18px;">
+  <div class="row" style="margin-bottom:18px;"><button class="btn btn-o btn-sm" onclick="back()">← Back</button><h2 style="font-family:'Exo 2';font-size:20px;font-weight:800;color:var(--p);">HOW TO PLAY</h2></div>
+  <div class="col">
+    <div class="card" style="border-color:rgba(0,245,160,.2);"><b style="color:var(--p);">🏪 Showroom</b><br><small style="color:var(--t2);">Your HQ. Track cash, rep & daily events.</small></div>
+    <div class="card" style="border-color:rgba(245,160,0,.2);"><b style="color:var(--s);">🏬 Shop</b><br><small style="color:var(--t2);">Buy bike stock. Sell higher = profit!</small></div>
+    <div class="card" style="border-color:rgba(168,85,247,.2);"><b style="color:var(--ac);">👥 Customers</b><br><small style="color:var(--t2);">Tap SERVE → negotiate price → sell!</small></div>
+    <div class="card"><b style="color:var(--gold);">💰 Finance</b><br><small style="color:var(--t2);">Rs.4,000 daily cost. Watch ads for Rs.10,000 bonus!</small></div>
+    <div class="card" style="border-color:rgba(0,210,255,.2);"><b style="color:#00d2ff;">⚡ Upgrades</b><br><small style="color:var(--t2);">Permanent benefits: more customers, higher profits!</small></div>
+    <div class="card" style="border-color:rgba(255,71,87,.3);"><b style="color:var(--red);">⚠️ Game Over</b><br><small style="color:var(--t2);">Cash hits Rs.0 = dealership closes! Keep money safe!</small></div>
+    <div style="background:rgba(0,245,160,.06);border:1px solid rgba(0,245,160,.15);border-radius:14px;padding:14px;">
+      <b style="color:var(--p);font-family:Rajdhani;">💡 TIPS</b>
+      <p style="font-size:12px;color:var(--t2);line-height:1.9;margin-top:6px;">• Cheap bikes sell fastest — start with CD70<br>• Watch ads daily for free Rs.10,000<br>• Keep Rs.10,000+ reserve always<br>• Upgrades give permanent game benefits!</p>
+    </div>
+  </div>
+  <button class="btn btn-g" style="margin-top:16px;" onclick="startGame()">🚀 START PLAYING</button>
+</div>
+
+<!-- SETTINGS -->
+<div class="pg" id="pg-settings" style="padding:18px;">
+  <div class="row" style="margin-bottom:18px;"><button class="btn btn-o btn-sm" onclick="back()">← Back</button><h2 style="font-family:'Exo 2';font-size:20px;font-weight:800;color:var(--p);">SETTINGS</h2></div>
+  <div class="col">
+    <div class="card">
+      <b style="font-family:Rajdhani;">🌐 Language</b>
+      <select id="sel-lang" style="width:100%;background:var(--card2);color:var(--t);border:1px solid rgba(255,255,255,.1);padding:10px;border-radius:10px;margin-top:10px;font-size:13px;">
+        <option>🇬🇧 English</option><option>🇵🇰 Urdu</option><option>🇸🇦 Arabic</option><option>🇮🇳 Hindi</option><option>🇪🇸 Spanish</option><option>🇫🇷 French</option><option>🇹🇷 Turkish</option><option>🇮🇩 Indonesian</option><option>🇮🇳 Punjabi</option><option>🇧🇩 Bengali</option>
+      </select>
+    </div>
+    <button class="btn btn-r" onclick="resetGame()">🔄 Reset Game</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game">
+  <div id="hdr">
+    <div class="row" style="gap:8px;">
+      <span style="font-size:20px;">🏍️</span>
+      <div><div style="font-family:'Exo 2';font-weight:900;font-size:13px;color:var(--p);letter-spacing:2px;">BIKE KING</div><div style="font-size:9px;color:var(--t2);font-family:Rajdhani;">DAY <span id="h-day">1</span></div></div>
+    </div>
+    <div class="row" style="gap:14px;">
+      <div style="text-align:right;"><div style="font-size:9px;color:var(--t2);font-family:Rajdhani;">CASH</div><div id="h-cash" style="font-family:'Exo 2';font-weight:800;font-size:16px;color:var(--p);">Rs.50,000</div></div>
+      <div style="text-align:right;"><div style="font-size:9px;color:var(--t2);font-family:Rajdhani;">REP</div><div id="h-rep" style="font-family:'Exo 2';font-weight:800;font-size:16px;color:var(--gold);">0</div></div>
+      <button onclick="go('pg-settings')" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:5px 8px;cursor:pointer;font-size:14px;color:var(--t2);">🌐</button>
+    </div>
+  </div>
+
+  <!-- SHOWROOM TAB -->
+  <div class="tab on" id="tab-show">
+    <div style="height:120px;background:linear-gradient(135deg,#050d05,#0a1a0a);position:relative;overflow:hidden;">
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at bottom,rgba(0,245,160,.12),transparent 70%);"></div>
+      <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--p),transparent);"></div>
+      <div style="position:absolute;bottom:16px;left:0;right:0;display:flex;justify-content:center;gap:14px;align-items:flex-end;">
+        <span style="font-size:22px;opacity:.6;filter:drop-shadow(0 0 6px rgba(0,245,160,.4));transform:scaleX(-1);">🏍️</span>
+        <span style="font-size:36px;filter:drop-shadow(0 0 12px rgba(0,245,160,.7));">🏍️</span>
+        <span style="font-size:22px;opacity:.6;filter:drop-shadow(0 0 6px rgba(0,245,160,.4));">🏍️</span>
+      </div>
+      <div style="position:absolute;top:10px;left:12px;right:12px;display:flex;justify-content:space-between;">
+        <div style="background:rgba(0,245,160,.15);border:1px solid rgba(0,245,160,.3);border-radius:20px;padding:4px 12px;font-family:Rajdhani;font-size:11px;color:var(--p);font-weight:700;">🟢 OPEN</div>
+        <div id="sh-stock" style="background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:4px 12px;font-family:Rajdhani;font-size:11px;color:var(--t2);">— bikes</div>
+      </div>
+    </div>
+    <div style="padding:8px;display:flex;flex-direction:column;gap:6px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <div style="background:rgba(0,245,160,.1);border:1px solid rgba(0,245,160,.2);border-radius:10px;padding:7px;text-align:center;"><div style="font-size:8px;color:var(--t2);font-family:Rajdhani;">SOLD TODAY</div><div id="s-sold" style="font-family:'Exo 2';font-size:18px;font-weight:900;color:var(--p);">0</div></div>
+        <div style="background:rgba(245,160,0,.1);border:1px solid rgba(245,160,0,.2);border-radius:10px;padding:7px;text-align:center;"><div style="font-size:8px;color:var(--t2);font-family:Rajdhani;">PROFIT</div><div id="s-profit" style="font-family:'Exo 2';font-size:13px;font-weight:900;color:var(--s);">Rs.0</div></div>
+        <div style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);border-radius:10px;padding:7px;text-align:center;"><div style="font-size:8px;color:var(--t2);font-family:Rajdhani;">REP</div><div id="s-rep" style="font-family:'Exo 2';font-size:18px;font-weight:900;color:var(--ac);">0</div></div>
+      </div>
+      <div class="card" style="padding:8px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="font-size:11px;font-family:Rajdhani;color:var(--t2);">⭐ REPUTATION</span><span id="rep-lbl" style="font-size:11px;font-family:Rajdhani;color:var(--p);font-weight:700;">ROOKIE</span></div>
+        <div style="background:rgba(255,255,255,.06);border-radius:4px;height:7px;overflow:hidden;"><div id="rep-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--p),var(--s));border-radius:4px;transition:width .5s;"></div></div>
+      </div>
+      <div id="ev-box" style="background:rgba(245,160,0,.08);border:1px solid rgba(245,160,0,.2);border-radius:10px;padding:8px;">
+        <div style="font-size:11px;color:var(--s);font-family:Rajdhani;font-weight:700;margin-bottom:4px;">📢 TODAY'S EVENT</div>
+        <div id="ev-txt" style="font-size:11px;color:var(--t);line-height:1.4;">A normal day. Serve your customers!</div>
+      </div>
+      <div id="warn-cash" style="display:none;background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.3);border-radius:12px;padding:10px;"><div style="color:var(--red);font-size:12px;font-weight:700;font-family:Rajdhani;">⚠️ LOW CASH! Sell bikes or take a loan!</div></div>
+      <div style="background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.07);border-radius:8px;padding:6px;text-align:center;"><span style="color:rgba(255,255,255,.18);font-size:9px;font-family:Rajdhani;letter-spacing:1px;">ADVERTISEMENT</span></div>
+      <button class="btn btn-o" onclick="openEndDay()" style="font-size:14px;padding:11px;border-color:rgba(0,245,160,.4);">🌙 END DAY</button>
+    </div>
+  </div>
+
+  <!-- SHOP TAB -->
+  <div class="tab" id="tab-shop">
+    <div style="background:linear-gradient(135deg,#080f08,#0f1f0f);padding:10px 12px 8px;border-bottom:1px solid rgba(0,245,160,.1);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div><div style="font-size:9px;color:var(--t2);font-family:Rajdhani;letter-spacing:2px;">SUPPLIER CATALOGUE</div><div style="font-family:'Exo 2';font-size:20px;font-weight:900;">🏬 Bike Shop</div></div>
+        <div style="background:rgba(0,245,160,.1);border:1px solid rgba(0,245,160,.2);border-radius:10px;padding:8px 12px;text-align:right;"><div style="font-size:9px;color:var(--t2);font-family:Rajdhani;">STOCK VALUE</div><div id="inv-val" style="font-size:15px;font-weight:800;color:var(--p);font-family:'Exo 2';">Rs.0</div></div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button id="f-all" onclick="setFilter('all')" style="background:var(--p);color:#000;border:none;padding:6px 16px;border-radius:20px;font-size:11px;font-weight:800;cursor:pointer;font-family:Rajdhani;">ALL</button>
+        <button id="f-std" onclick="setFilter('Standard')" style="background:rgba(255,255,255,.07);color:var(--t2);border:1px solid rgba(255,255,255,.1);padding:6px 16px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;font-family:Rajdhani;">STANDARD</button>
+        <button id="f-spt" onclick="setFilter('Sport')" style="background:rgba(255,255,255,.07);color:var(--t2);border:1px solid rgba(255,255,255,.1);padding:6px 16px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;font-family:Rajdhani;">SPORT</button>
+      </div>
+    </div>
+    <div id="inv-list" style="padding:10px;"></div>
+  </div>
+
+  <!-- CUSTOMERS TAB -->
+  <div class="tab" id="tab-cust">
+    <div style="background:linear-gradient(135deg,#0a0818,#130a20);padding:10px 12px 0;border-bottom:1px solid rgba(168,85,247,.15);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div><div style="font-size:9px;color:var(--t2);font-family:Rajdhani;letter-spacing:2px;">CUSTOMER LOUNGE</div><div style="font-family:'Exo 2';font-size:20px;font-weight:900;">👥 Visitors</div></div>
+        <div id="cust-badge" style="background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);border-radius:20px;padding:6px 14px;color:var(--ac);font-size:12px;font-weight:700;font-family:Rajdhani;">0 waiting</div>
+      </div>
+    </div>
+    <div id="cust-list" style="padding:10px;"></div>
+    <div id="no-cust" style="display:none;padding:50px 20px;text-align:center;"><div style="font-size:52px;opacity:.4;margin-bottom:10px;">😴</div><p style="color:var(--t2);font-family:Rajdhani;font-size:14px;">No customers right now</p><p style="color:rgba(255,255,255,.25);font-size:12px;margin-top:4px;">End day to get new customers!</p></div>
+  </div>
+
+  <!-- FINANCE TAB -->
+  <div class="tab" id="tab-fin" style="padding:8px;flex-direction:column;gap:8px;">
+    <div style="background:linear-gradient(135deg,#050d14,#0a1520);border:1px solid rgba(0,210,255,.15);border-radius:14px;padding:12px;">
+      <div style="font-size:10px;color:var(--t2);font-family:Rajdhani;letter-spacing:2px;margin-bottom:4px;">AVAILABLE CASH</div>
+      <div id="f-cash" style="font-family:'Exo 2';font-size:26px;font-weight:900;color:var(--p);">Rs.50,000</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+        <div style="background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.15);border-radius:8px;padding:8px;"><div style="font-size:8px;color:var(--t2);font-family:Rajdhani;">DAILY EXPENSES</div><div style="color:var(--red);font-weight:800;font-size:13px;font-family:'Exo 2';">-Rs.4,000</div></div>
+        <div style="background:rgba(0,245,160,.08);border:1px solid rgba(0,245,160,.15);border-radius:8px;padding:8px;"><div style="font-size:8px;color:var(--t2);font-family:Rajdhani;">TODAY'S REVENUE</div><div id="f-rev" style="color:var(--p);font-weight:800;font-size:15px;font-family:'Exo 2';">Rs.0</div></div>
+      </div>
+    </div>
+    <button class="btn btn-y" onclick="watchAd()" style="padding:10px;font-size:13px;">▶ Watch Ad → Get Rs.10,000 FREE!</button>
+    <div class="card" style="padding:10px;">
+      <div style="font-family:Rajdhani;font-weight:700;font-size:13px;margin-bottom:8px;">🏦 BANK LOANS</div>
+      <div class="col">
+        <div style="background:var(--card2);border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center;"><div><div style="font-weight:700;font-size:13px;font-family:Rajdhani;">Rs.50,000</div><div style="font-size:11px;color:var(--t2);">Repay Rs.60,000 in 10 days</div></div><button class="btn btn-g btn-sm" onclick="takeLoan(50000,60000,10)">BORROW</button></div>
+        <div style="background:var(--card2);border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center;"><div><div style="font-weight:700;font-size:13px;font-family:Rajdhani;">Rs.1,00,000</div><div style="font-size:11px;color:var(--t2);">Repay Rs.1,20,000 in 15 days</div></div><button class="btn btn-g btn-sm" onclick="takeLoan(100000,120000,15)">BORROW</button></div>
+        <div id="big-loan" style="display:none;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.2);border-radius:12px;padding:12px;justify-content:space-between;align-items:center;"><div><div style="font-weight:700;font-size:13px;font-family:Rajdhani;color:var(--gold);">Rs.5,00,000</div><div style="font-size:11px;color:var(--t2);">VIP Loan — Repay in 25 days</div></div><button class="btn btn-y btn-sm" onclick="takeLoan(500000,600000,25)">BORROW</button></div>
+      </div>
+      <div id="loan-info" style="display:none;margin-top:10px;background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.2);border-radius:10px;padding:10px;">
+        <div style="color:var(--red);font-size:12px;font-weight:700;font-family:Rajdhani;">ACTIVE LOAN: Rs.<span id="loan-rem">0</span> left · <span id="loan-days">0</span> days</div>
+        <div style="background:rgba(255,255,255,.06);border-radius:4px;height:5px;margin-top:6px;overflow:hidden;"><div id="loan-bar" style="height:100%;background:var(--red);border-radius:4px;width:100%;transition:width .5s;"></div></div>
+      </div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <div style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.05);font-family:Rajdhani;font-weight:700;font-size:13px;">📋 TRANSACTIONS</div>
+      <div id="tx-list" style="max-height:120px;overflow-y:auto;"><div style="padding:14px;text-align:center;color:var(--t2);font-size:12px;">No transactions yet</div></div>
+    </div>
+  </div>
+
+  <!-- UPGRADES TAB -->
+  <div class="tab" id="tab-upg" style="padding:8px;">
+    <div style="margin-bottom:12px;"><div style="font-size:9px;color:var(--t2);font-family:Rajdhani;letter-spacing:2px;">DEALERSHIP</div><div style="font-family:'Exo 2';font-size:20px;font-weight:900;">⚡ Upgrades</div></div>
+    <div id="upg-list" class="col"></div>
+  </div>
+
+  <div id="nav">
+    <button class="nb on" data-t="show" onclick="switchTab('show')"><span class="ic">🏍️</span>SHOWROOM</button>
+    <button class="nb" data-t="shop" onclick="switchTab('shop')"><span class="ic">🏬</span>SHOP</button>
+    <button class="nb" data-t="cust" onclick="switchTab('cust')" style="position:relative;"><span class="ic">👥</span>CUSTOMERS<span id="c-dot" style="display:none;position:absolute;top:6px;right:6px;width:8px;height:8px;background:var(--red);border-radius:50%;"></span></button>
+    <button class="nb" data-t="fin" onclick="switchTab('fin')"><span class="ic">💰</span>FINANCE</button>
+    <button class="nb" data-t="upg" onclick="switchTab('upg')"><span class="ic">⚡</span>UPGRADES</button>
+  </div>
+</div>
+
+<!-- NEGOTIATION -->
+<div class="ov" id="ov-neg">
+  <div style="height:128px;background:linear-gradient(135deg,#050814,#0a0d20);position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+    <span style="font-size:54px;filter:drop-shadow(0 0 20px rgba(0,245,160,.5));">🤝</span>
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--p),transparent);"></div>
+    <button onclick="closeNeg()" style="position:absolute;top:12px;right:12px;background:rgba(255,71,87,.15);border:1px solid rgba(255,71,87,.3);color:var(--red);width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:18px;font-weight:700;">×</button>
+    <div style="position:absolute;top:12px;left:12px;"><div style="font-family:Rajdhani;font-size:10px;color:var(--t2);letter-spacing:2px;">NEGOTIATION</div><div id="neg-round" style="font-family:'Exo 2';font-size:14px;font-weight:800;color:var(--p);">ROUND 1/3</div></div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;">
+    <div class="card row">
+      <div id="neg-av" style="width:48px;height:48px;border-radius:50%;background:rgba(0,245,160,.15);border:2px solid rgba(0,245,160,.3);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">👤</div>
+      <div><div id="neg-name" style="font-family:'Exo 2';font-weight:800;font-size:15px;"></div><div id="neg-bike" style="font-size:12px;color:var(--t2);margin-top:2px;"></div></div>
+    </div>
+    <div style="background:rgba(0,245,160,.05);border:1px solid rgba(0,245,160,.15);border-radius:14px;padding:12px;"><p id="neg-dlg" style="font-size:13px;color:var(--t);line-height:1.6;font-style:italic;"></p></div>
+    <div class="card col" style="gap:6px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--t2);">Your sell price</span><span id="neg-sell" style="font-weight:700;"></span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--t2);">Customer offers</span><span id="neg-offer" style="font-weight:800;color:var(--s);font-size:16px;"></span></div>
+      <div style="height:1px;background:rgba(255,255,255,.06);"></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--t2);">Your profit</span><span id="neg-prof" style="font-weight:700;color:var(--p);"></span></div>
+    </div>
+    <div id="ctr-area" style="display:none;" class="card col">
+      <div style="font-size:12px;font-weight:700;font-family:Rajdhani;color:var(--s);">ENTER YOUR PRICE:</div>
+      <div class="row"><input type="number" id="ctr-inp" placeholder="Enter amount in Rs."/><button class="btn btn-g" style="width:60px;padding:10px 0;font-size:14px;" onclick="doCounter()">OK</button></div>
+    </div>
+    <div id="neg-btns" class="col">
+      <button class="btn btn-g" onclick="acceptDeal()" style="font-size:15px;padding:16px;">✅ ACCEPT — <span id="neg-acc">Rs.0</span></button>
+      <button class="btn btn-o" onclick="showCounter()" style="padding:14px;">💬 COUNTER OFFER</button>
+      <button onclick="rejectDeal()" style="background:transparent;border:1px solid rgba(255,71,87,.2);color:rgba(255,71,87,.7);padding:12px;border-radius:14px;font-size:13px;cursor:pointer;font-family:Rajdhani;font-weight:700;width:100%;">❌ REJECT — Customer Leaves</button>
+    </div>
+  </div>
+</div>
+
+<!-- END DAY MODAL -->
+<div id="ov-endday" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;align-items:center;justify-content:center;padding:16px;">
+  <div class="card" style="width:100%;max-width:360px;text-align:center;padding:24px;border-color:rgba(0,245,160,.2);">
+    <div style="font-size:44px;margin-bottom:10px;">🌙</div>
+    <h2 style="font-family:'Exo 2';font-size:22px;font-weight:900;">DAY <span id="ed-day">1</span> DONE!</h2>
+    <p style="color:var(--t2);font-size:12px;margin:4px 0 14px;">Daily summary</p>
+    <div class="col" style="text-align:left;gap:6px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--t2);">Bikes Sold</span><span id="ed-sales" style="font-weight:700;color:var(--p);"></span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--t2);">Revenue</span><span id="ed-rev" style="font-weight:700;color:var(--p);"></span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--t2);">Daily Expenses</span><span style="font-weight:700;color:var(--red);">-Rs.4,000</span></div>
+      <div id="ed-loan-row" style="display:none;justify-content:space-between;font-size:13px;"><span style="color:var(--t2);">Loan Payment</span><span id="ed-loan-amt" style="font-weight:700;color:var(--red);"></span></div>
+      <div style="height:1px;background:rgba(255,255,255,.08);"></div>
+      <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;"><span>Net Change</span><span id="ed-net" style="color:var(--p);"></span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--t2);">Cash After</span><span id="ed-cash" style="font-weight:700;color:var(--p);"></span></div>
+    </div>
+    <button class="btn btn-g" onclick="nextDay()" style="font-size:15px;">START DAY <span id="ed-nday">2</span> →</button>
+  </div>
+</div>
+
+<!-- GAME OVER -->
+<div class="pg" id="pg-over" style="align-items:center;justify-content:center;padding:24px;text-align:center;background:radial-gradient(ellipse at center,#1a0505,#07080f);">
+  <div style="width:100%;max-width:340px;">
+    <div style="font-size:64px;margin-bottom:14px;filter:drop-shadow(0 0 20px rgba(255,71,87,.5));">💸</div>
+    <h1 style="font-family:'Exo 2';font-size:30px;font-weight:900;color:var(--red);margin-bottom:6px;">DEALERSHIP CLOSED!</h1>
+    <p style="color:var(--t2);font-size:13px;margin-bottom:20px;">You ran out of money.</p>
+    <div class="card col" style="text-align:left;margin-bottom:18px;border-color:rgba(255,71,87,.2);">
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--t2);font-size:13px;">Days Survived</span><span id="go-days" style="font-weight:800;color:var(--p);font-family:'Exo 2';"></span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--t2);font-size:13px;">Bikes Sold</span><span id="go-sales" style="font-weight:800;color:var(--p);font-family:'Exo 2';"></span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--t2);font-size:13px;">Total Revenue</span><span id="go-rev" style="font-weight:800;color:var(--p);font-family:'Exo 2';"></span></div>
+    </div>
+    <div class="col"><button class="btn btn-g" onclick="startGame()">🔄 TRY AGAIN</button><button class="btn btn-o" onclick="go('pg-menu')">🏠 MAIN MENU</button></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+var BIKES=[
+  {n:'United 70cc',  t:'Standard',buy:65000, sell:80000, img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&q=80'},
+  {n:'Honda CD70',   t:'Standard',buy:95000, sell:110000,img:'https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=300&q=80'},
+  {n:'Honda CG125',  t:'Standard',buy:145000,sell:165000,img:'https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=300&q=80'},
+  {n:'Yamaha YBR125',t:'Standard',buy:220000,sell:250000,img:'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=300&q=80'},
+  {n:'Suzuki GS150', t:'Standard',buy:280000,sell:320000,img:'https://images.unsplash.com/photo-1591637333184-19aa84b3e01f?w=300&q=80'},
+  {n:'Honda CB150F', t:'Sport',   buy:310000,sell:350000,img:'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?w=300&q=80'},
+  {n:'Road Prince 150',t:'Sport', buy:180000,sell:210000,img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&q=80'},
+  {n:'Ravi Piaggio 150',t:'Standard',buy:160000,sell:190000,img:'https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=300&q=80'}
+];
+var CUSTS=[
+  {nm:'Ali Khan',   em:'👨',tp:'Daily Commuter',   bd:[80000,200000], wt:['Standard'],        dlg:'I need a reliable 70cc for daily use. Best price?'},
+  {nm:'Hamza Butt', em:'👦',tp:'College Student',  bd:[200000,400000],wt:['Sport','Standard'], dlg:'Want something sporty for college. Budget Rs.2.5 lac.'},
+  {nm:'Mr. Ahmed',  em:'👔',tp:'Business Pro',     bd:[300000,500000],wt:['Standard','Sport'], dlg:'Quality is priority. Price is flexible.'},
+  {nm:'Usman Malik',em:'🧔',tp:'Daily Commuter',   bd:[100000,250000],wt:['Standard'],        dlg:'Any Honda CD70 or CG125 in good condition?'},
+  {nm:'Faizan Raza',em:'😎',tp:'Bike Enthusiast',  bd:[300000,400000],wt:['Sport'],           dlg:'I know market prices. Looking for sport bike, be fair.'}
+];
+var EVENTS=['A normal day. Serve your customers well!','Eid season! Extra customers today!','Petrol prices dropped! More interest in bikes!','Heavy rain. Fewer customers expected today.','Your shop went viral! Reputation +10!','PSL season! Bike sales booming!','New competitor opened. Stay competitive!'];
+var UPGRADES=[
+  {id:'ads1', icon:'📱',nm:'Social Media Ads',  desc:'+2 customers every day',       cost:50000,  fn:function(){G.ec+=2;showToast('📱 +2 customers/day active!');}},
+  {id:'mech', icon:'🔧',nm:'Hire Mechanic',     desc:'All bikes sell 10% higher',    cost:200000, fn:function(){G.sb+=0.10;showToast('🔧 All bikes +10% sell price!');}},
+  {id:'sales',icon:'🧑',nm:'Sales Expert',      desc:'Better negotiation success',   cost:300000, fn:function(){G.nb2+=0.30;showToast('🧑 Negotiations improved!');}},
+  {id:'bank', icon:'🏦',nm:'Bank Connection',   desc:'Unlock Rs.5 lac emergency loan',cost:300000,fn:function(){G.bl=true;document.getElementById('big-loan').style.display='flex';showToast('🏦 Big loan unlocked in Finance!');}},
+  {id:'show2',icon:'🏪',nm:'Medium Showroom',   desc:'+15 Reputation instantly',     cost:500000, fn:function(){G.rep=Math.min(100,G.rep+15);refreshUI();showToast('🏪 +15 Reputation!');}},
+  {id:'tv',   icon:'📺',nm:'TV Advertisement',  desc:'+5 customers every day',       cost:800000, fn:function(){G.ec+=5;showToast('📺 +5 customers/day!');}},
+  {id:'pfx',  icon:'💹',nm:'Profit Multiplier', desc:'+20% profit on every sale',    cost:1000000,fn:function(){G.pm+=0.20;showToast('💹 +20% profit on all sales!');}},
+  {id:'show3',icon:'🏢',nm:'Large Showroom',    desc:'+30 Rep + VIP customers',      cost:1500000,fn:function(){G.rep=Math.min(100,G.rep+30);G.vip=true;refreshUI();showToast('🏢 +30 Rep + VIPs unlocked!');}}
+];
+
+var G={},NEG=null,INV_FILTER='all',SHOW_ALL=false,AD_LEFT=5,TOAST_T=null,PREV='pg-menu';
+
+function newG(){G={cash:50000,rep:0,day:1,stock:{},owned:[],sales:0,rev:0,ts:0,tr:0,tx:[],loan:null,ec:0,sb:0,nb2:0,pm:0,bl:false,vip:false};BIKES.forEach(function(b){G.stock[b.n]=2;});AD_LEFT=5;}
+
+function go(id){
+  PREV=document.querySelector('.pg.on')?document.querySelector('.pg.on').id:PREV;
+  document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
+  document.getElementById('game').classList.remove('on');
+  document.getElementById(id).classList.add('on');
+}
+function back(){go(PREV);}
+function goGame(){
+  document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
+  document.getElementById('game').classList.add('on');
+}
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('on');});
+  document.getElementById('tab-'+t).classList.add('on');
+  document.querySelectorAll('.nb').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-t')===t);});
+  if(t==='shop')renderShop();
+  if(t==='cust')renderCusts();
+  if(t==='fin')renderFin();
+  if(t==='upg')renderUpg();
+}
+
+window.onload=function(){
+  setTimeout(function(){document.getElementById('load-bar').style.width='100%';document.getElementById('load-txt').textContent='READY!';},200);
+  setTimeout(function(){go('pg-menu');loadMenu();},2400);
+};
+
+function loadMenu(){
+  var s=getSave(),best=localStorage.getItem('bk-best')||'';
+  if(best)document.getElementById('sp-best').textContent=best;
+  var rb=document.getElementById('btn-resume'),si=document.getElementById('sp-save');
+  if(s&&(s.day>1||s.sales>0)){rb.style.display='block';si.style.display='block';document.getElementById('sp-sday').textContent=s.day;document.getElementById('sp-scash').textContent=fmt(s.cash);}
+  else{rb.style.display='none';si.style.display='none';}
+}
+
+function startGame(){newG();genCusts();genEvent();goGame();switchTab('show');refreshUI();renderShop();renderCusts();renderUpg();save();}
+function confirmNew(){var s=getSave();if(s&&(s.day>1||s.sales>0)){if(!confirm('You have saved game (Day '+s.day+'). Start fresh?'))return;}localStorage.removeItem('bk-save');startGame();}
+
+function resumeGame(){
+  var s=getSave();if(!s){showToast('No saved game!');return;}
+  G.cash=s.cash||50000;G.rep=s.rep||0;G.day=s.day||1;G.stock=s.stock||{};G.owned=s.owned||[];
+  G.sales=s.sales||0;G.rev=s.rev||0;G.ts=s.ts||0;G.tr=s.tr||0;G.tx=s.tx||[];G.loan=s.loan||null;
+  G.ec=s.ec||0;G.sb=s.sb||0;G.nb2=s.nb2||0;G.pm=s.pm||0;G.bl=s.bl||false;G.vip=s.vip||false;
+  BIKES.forEach(function(b){if(G.stock[b.n]===undefined)G.stock[b.n]=0;});
+  AD_LEFT=5;genCusts();genEvent();goGame();switchTab('show');refreshUI();renderShop();renderCusts();renderUpg();
+  showToast('Welcome back! Day '+G.day);
+}
+function resetGame(){if(!confirm('Reset all progress?'))return;localStorage.removeItem('bk-save');localStorage.removeItem('bk-best');go('pg-menu');loadMenu();}
+
+function save(){
+  try{localStorage.setItem('bk-save',JSON.stringify({cash:G.cash,rep:G.rep,day:G.day,stock:G.stock,owned:G.owned,sales:G.sales,rev:G.rev,ts:G.ts,tr:G.tr,tx:G.tx.slice(-20),loan:G.loan,ec:G.ec,sb:G.sb,nb2:G.nb2,pm:G.pm,bl:G.bl,vip:G.vip}));}catch(e){}
+}
+function getSave(){try{return JSON.parse(localStorage.getItem('bk-save'));}catch(e){return null;}}
+
+function refreshUI(){
+  document.getElementById('h-day').textContent=G.day;
+  document.getElementById('h-cash').textContent='Rs.'+fmt(G.cash);
+  document.getElementById('h-rep').textContent=G.rep;
+  var ss=document.getElementById('s-sold');if(ss)ss.textContent=G.ts;
+  var sp=document.getElementById('s-profit');if(sp)sp.textContent='Rs.'+fmt(G.tr);
+  var sr=document.getElementById('s-rep');if(sr){sr.textContent=G.rep;sr.style.color=G.rep>=70?'var(--p)':G.rep>=40?'var(--s)':'var(--red)';}
+  var rb=document.getElementById('rep-bar');if(rb)rb.style.width=G.rep+'%';
+  var rl=document.getElementById('rep-lbl');if(rl)rl.textContent=G.rep>=80?'LEGEND':G.rep>=60?'PRO DEALER':G.rep>=40?'RISING STAR':G.rep>=20?'APPRENTICE':'ROOKIE';
+  var t=0;BIKES.forEach(function(b){t+=G.stock[b.n]||0;});
+  var sh=document.getElementById('sh-stock');if(sh)sh.textContent=t+' bikes';
+  var w=document.getElementById('warn-cash');if(w)w.style.display=G.cash<10000?'block':'none';
+  var a=G.custs?G.custs.filter(function(c){return!c.done;}).length:0;
+  var d=document.getElementById('c-dot');if(d)d.style.display=a>0?'block':'none';
+  var cb=document.getElementById('cust-badge');if(cb)cb.textContent=a+' waiting';
+}
+
+function genEvent(){
+  var ev=EVENTS[Math.floor(Math.random()*EVENTS.length)];
+  var el=document.getElementById('ev-txt');if(el)el.textContent=ev;
+  if(ev.indexOf('Reputation +10')>-1){G.rep=Math.min(100,G.rep+10);refreshUI();}
+}
+function genCusts(){
+  var n=Math.min(2+Math.floor(G.day/3)+G.ec,10);
+  G.custs=[];
+  for(var i=0;i<n;i++){var c=CUSTS[Math.floor(Math.random()*CUSTS.length)];G.custs.push({id:Date.now()+i,nm:c.nm,em:c.em,tp:c.tp,bd:c.bd,wt:c.wt,dlg:c.dlg,done:false});}
+}
+
+function renderCusts(){
+  var active=G.custs.filter(function(c){return!c.done;});
+  var list=document.getElementById('cust-list'),nc=document.getElementById('no-cust'),cb=document.getElementById('cust-badge');
+  cb.textContent=active.length+' waiting';
+  if(active.length===0){list.innerHTML='';nc.style.display='block';return;}
+  nc.style.display='none';
+  var C=['rgba(0,245,160,.15)','rgba(245,160,0,.15)','rgba(168,85,247,.15)','rgba(0,210,255,.15)','rgba(255,71,87,.15)'];
+  var B=['rgba(0,245,160,.3)','rgba(245,160,0,.3)','rgba(168,85,247,.3)','rgba(0,210,255,.3)','rgba(255,71,87,.3)'];
+  var TX=['var(--p)','var(--s)','var(--ac)','#00d2ff','var(--red)'];
+  list.innerHTML=active.map(function(c,i){
+    var ci=i%5,m=getBike(c);
+    var bl=c.bd[0]<200000?'Low':c.bd[0]<500000?'Mid':'High';
+    var bc=c.bd[0]<200000?'var(--red)':c.bd[0]<500000?'var(--s)':'var(--p)';
+    return '<div style="background:'+C[ci]+';border:1px solid '+B[ci]+';border-radius:16px;margin-bottom:10px;overflow:hidden;">'+
+      '<div style="padding:12px;display:flex;align-items:center;gap:10px;">'+
+        '<div style="width:46px;height:46px;border-radius:50%;background:'+C[ci]+';border:2px solid '+B[ci]+';display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">'+c.em+'</div>'+
+        '<div style="flex:1;"><div style="font-family:\'Exo 2\';font-weight:800;font-size:14px;">'+c.nm+'</div><div style="font-size:11px;color:var(--t2);">'+c.tp+'</div><div style="font-size:10px;color:'+TX[ci]+';margin-top:2px;">Wants: '+c.wt.join('/')+'</div></div>'+
+        '<div style="text-align:right;"><div style="font-size:9px;color:var(--t2);">BUDGET</div><div style="font-weight:700;color:'+bc+';font-size:12px;">Rs.'+fmt(c.bd[0])+'</div><div style="font-size:9px;color:'+bc+';">'+bl+' Budget</div></div>'+
+      '</div>'+
+      '<div style="margin:0 12px 10px;background:rgba(0,0,0,.3);border-radius:10px;padding:8px 10px;">'+
+        '<div style="font-size:9px;color:'+TX[ci]+';font-weight:700;margin-bottom:3px;">💬 SAYS</div>'+
+        '<div style="font-size:12px;color:var(--t);font-style:italic;">"'+c.dlg+'"</div>'+
+      '</div>'+
+      '<div style="padding:0 12px 12px;">'+
+        (m?'<button onclick="serveCust('+c.id+')" style="width:100%;background:linear-gradient(135deg,'+TX[ci]+','+B[ci]+');color:#000;border:none;padding:12px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Rajdhani;letter-spacing:1px;">🤝 SERVE CUSTOMER</button>'
+           :'<div style="background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.25);color:var(--red);padding:10px;border-radius:12px;text-align:center;font-size:12px;font-weight:700;font-family:Rajdhani;">❌ No matching bike in stock</div>')+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function getBike(c){return BIKES.find(function(b){return c.wt.indexOf(b.t)>-1&&(G.stock[b.n]||0)>0&&b.sell>=c.bd[0];});}
+
+function serveCust(id){
+  var c=G.custs.find(function(x){return x.id===id;});
+  if(!c)return;
+  var bike=getBike(c);
+  if(!bike){showToast('No matching bike! Buy stock first.');return;}
+  var sp=Math.round(bike.sell*(1+G.sb));
+  var offer=Math.round(sp*0.80);
+  NEG={c:c,bike:bike,sp:sp,offer:offer,round:1};
+  updNeg();
+  document.getElementById('ov-neg').classList.add('on');
+  document.getElementById('ctr-area').style.display='none';
+  document.getElementById('neg-btns').style.display='flex';
+  document.getElementById('neg-btns').style.flexDirection='column';
+}
+function updNeg(){
+  if(!NEG)return;
+  document.getElementById('neg-round').textContent='ROUND '+NEG.round+'/3';
+  document.getElementById('neg-av').textContent=NEG.c.em;
+  document.getElementById('neg-name').textContent=NEG.c.nm;
+  document.getElementById('neg-bike').textContent='Interested in: '+NEG.bike.n;
+  document.getElementById('neg-sell').textContent='Rs.'+fmt(NEG.sp);
+  document.getElementById('neg-offer').textContent='Rs.'+fmt(NEG.offer);
+  document.getElementById('neg-prof').textContent='Rs.'+fmt(NEG.offer-NEG.bike.buy);
+  document.getElementById('neg-acc').textContent='Rs.'+fmt(NEG.offer);
+  var d=['"I want the '+NEG.bike.n+'. Would you take Rs.'+fmt(NEG.offer)+'?"','"Rs.'+fmt(NEG.offer)+' is my best offer. I know the market."','"Final offer — Rs.'+fmt(NEG.offer)+'. Take it or leave it!"'];
+  document.getElementById('neg-dlg').textContent=d[Math.min(NEG.round-1,2)];
+}
+function acceptDeal(){
+  if(!NEG){closeNeg();return;}
+  var earned=NEG.offer;
+  if(G.pm>0)earned=Math.round(NEG.offer+(NEG.offer-NEG.bike.buy)*G.pm);
+  var profit=earned-NEG.bike.buy;
+  G.cash+=earned;
+  G.stock[NEG.bike.n]--;
+  G.rep=Math.min(100,G.rep+5);
+  G.sales++;G.ts++;G.rev+=earned;G.tr+=earned;
+  addTx('Sold: '+NEG.bike.n,'+Rs.'+fmt(earned),true);
+  var c=G.custs.find(function(x){return x.id===NEG.c.id;});if(c)c.done=true;
+  closeNeg();
+  showToast('SOLD! +Rs.'+fmt(earned)+' | Profit: Rs.'+fmt(profit));
+  floatCoin(earned);soldStamp();
+  refreshUI();renderCusts();save();
+}
+function showCounter(){document.getElementById('ctr-area').style.display='block';document.getElementById('ctr-inp').value='';document.getElementById('ctr-inp').focus();}
+function doCounter(){
+  if(!NEG)return;
+  var v=parseInt(document.getElementById('ctr-inp').value);
+  if(!v||v<1000){showToast('Enter valid price!');return;}
+  if(NEG.round>=3){rejectDeal();return;}
+  document.getElementById('ctr-area').style.display='none';
+  NEG.round++;
+  var d=(v-NEG.offer)/NEG.sp;
+  if(d<=0.12){NEG.offer=v;updNeg();showToast('Customer accepted!');}
+  else if(d<=0.22){NEG.offer=Math.round((v+NEG.offer)/2);updNeg();showToast('Customer countered!');}
+  else{showToast('Too high! Customer leaving...');setTimeout(rejectDeal,700);}
+}
+function rejectDeal(){G.rep=Math.max(0,G.rep-2);if(NEG){var c=G.custs.find(function(x){return x.id===NEG.c.id;});if(c)c.done=true;}closeNeg();showToast('Customer left. Rep -2');refreshUI();renderCusts();}
+function closeNeg(){document.getElementById('ov-neg').classList.remove('on');NEG=null;}
+
+function setFilter(f){
+  INV_FILTER=f;SHOW_ALL=false;
+  var m={'all':'f-all','Standard':'f-std','Sport':'f-spt'};
+  Object.keys(m).forEach(function(k){var b=document.getElementById(m[k]);if(b){b.style.background=k===f?'var(--p)':'rgba(255,255,255,.07)';b.style.color=k===f?'#000':'var(--t2)';b.style.border=k===f?'none':'1px solid rgba(255,255,255,.1)';}});
+  renderShop();
+}
+function renderShop(){
+  var bikes=INV_FILTER==='all'?BIKES:BIKES.filter(function(b){return b.t===INV_FILTER;});
+  var show=SHOW_ALL?bikes:bikes.slice(0,4),hidden=bikes.length-show.length,tv=0;
+  BIKES.forEach(function(b){tv+=(G.stock[b.n]||0)*b.sell;});
+  var iv=document.getElementById('inv-val');if(iv)iv.textContent='Rs.'+fmt(tv);
+  var BC={'United 70cc':'#84cc16','Honda CD70':'#ef4444','Honda CG125':'#3b82f6','Yamaha YBR125':'#8b5cf6','Suzuki GS150':'#10b981','Honda CB150F':'#f59e0b','Road Prince 150':'#ec4899','Ravi Piaggio 150':'#06b6d4'};
+  var h='<div class="grid2">';
+  show.forEach(function(b){
+    var s=G.stock[b.n]||0,col=BC[b.n]||'#4bddb7',can=G.cash>=b.buy;
+    h+='<div style="background:rgba(0,0,0,.4);border:1px solid '+col+'33;border-radius:16px;overflow:hidden;position:relative;">'+
+      '<div style="position:absolute;top:7px;right:7px;z-index:2;background:'+(s>0?'rgba(0,245,160,.85)':'rgba(255,71,87,.85)')+';border-radius:6px;padding:2px 7px;font-size:9px;font-weight:800;color:#000;font-family:Rajdhani;">'+(s>0?s+' left':'OUT')+'</div>'+
+      '<div style="height:100px;overflow:hidden;"><img src="'+b.img+'" style="width:100%;height:100%;object-fit:cover;filter:brightness(.85);"/></div>'+
+      '<div style="padding:8px 9px 0;"><div style="color:#fff;font-size:11px;font-weight:700;font-family:Rajdhani;">'+b.n+'</div><div style="display:inline-block;background:'+col+'22;border:1px solid '+col+'44;border-radius:5px;padding:1px 6px;font-size:9px;color:'+col+';margin-top:2px;">'+b.t+'</div></div>'+
+      '<div style="padding:5px 9px 9px;">'+
+        '<div style="display:flex;justify-content:space-between;font-size:9px;margin-bottom:2px;"><span style="color:rgba(255,255,255,.4);">BUY</span><span>Rs.'+fmt(b.buy)+'</span></div>'+
+        '<div style="display:flex;justify-content:space-between;font-size:9px;margin-bottom:2px;"><span style="color:rgba(255,255,255,.4);">SELL</span><span style="color:'+col+';">Rs.'+fmt(b.sell)+'</span></div>'+
+        '<div style="display:flex;justify-content:space-between;font-size:9px;margin-bottom:7px;"><span style="color:rgba(255,255,255,.4);">PROFIT</span><span style="color:var(--p);font-weight:700;">+Rs.'+fmt(b.sell-b.buy)+'</span></div>'+
+        '<button onclick="buyBike(\''+b.n+'\')" style="width:100%;background:'+(can?col:'rgba(255,255,255,.06)')+';color:'+(can?'#000':'rgba(255,255,255,.3)')+';border:none;padding:7px;border-radius:9px;font-size:10px;font-weight:800;cursor:'+(can?'pointer':'not-allowed')+';font-family:Rajdhani;">'+(can?'+ BUY STOCK':'NOT ENOUGH CASH')+'</button>'+
+      '</div></div>';
+  });
+  h+='</div>';
+  if(hidden>0)h+='<button onclick="SHOW_ALL=true;renderShop();" style="width:100%;margin-top:10px;background:rgba(0,245,160,.08);border:1px solid rgba(0,245,160,.25);color:var(--p);padding:13px;border-radius:14px;font-family:Rajdhani;font-weight:800;font-size:14px;cursor:pointer;">▼ SHOW '+hidden+' MORE BIKES</button>';
+  else if(SHOW_ALL&&bikes.length>4)h+='<button onclick="SHOW_ALL=false;renderShop();" style="width:100%;margin-top:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--t2);padding:12px;border-radius:14px;font-family:Rajdhani;font-weight:700;font-size:13px;cursor:pointer;">↑ SHOW LESS</button>';
+  document.getElementById('inv-list').innerHTML=h;
+}
+function buyBike(n){
+  var b=BIKES.find(function(x){return x.n===n;});if(!b)return;
+  if(G.cash<b.buy){showToast('Not enough cash!');return;}
+  G.cash-=b.buy;G.stock[b.n]=(G.stock[b.n]||0)+1;
+  addTx('Bought: '+b.n,'-Rs.'+fmt(b.buy),false);
+  showToast('Bought 1x '+b.n+'!');refreshUI();renderShop();save();
+}
+
+function renderFin(){
+  document.getElementById('f-cash').textContent='Rs.'+fmt(G.cash);
+  document.getElementById('f-rev').textContent='Rs.'+fmt(G.tr);
+  var bl=document.getElementById('big-loan');if(bl)bl.style.display=G.bl?'flex':'none';
+  var li=document.getElementById('loan-info');
+  if(G.loan){li.style.display='block';document.getElementById('loan-rem').textContent=fmt(G.loan.rem);document.getElementById('loan-days').textContent=G.loan.days;document.getElementById('loan-bar').style.width=(G.loan.rem/G.loan.total*100)+'%';}
+  else li.style.display='none';
+  var tl=document.getElementById('tx-list');
+  if(!G.tx||!G.tx.length){tl.innerHTML='<div style="padding:14px;text-align:center;color:var(--t2);font-size:12px;">No transactions yet</div>';return;}
+  tl.innerHTML=G.tx.slice().reverse().slice(0,15).map(function(t){
+    return '<div style="padding:9px 14px;display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.04);"><div><div style="font-size:12px;font-family:Rajdhani;font-weight:600;">'+t.l+'</div><div style="font-size:10px;color:var(--t2);">Day '+t.d+'</div></div><div style="font-weight:800;font-size:13px;color:'+(t.p?'var(--p)':'var(--red)')+';">'+t.a+'</div></div>';
+  }).join('');
+}
+function takeLoan(amt,total,days){
+  if(G.loan){showToast('Already have active loan!');return;}
+  G.cash+=amt;G.loan={rem:total,total:total,daily:Math.ceil(total/days),days:days};
+  addTx('Bank Loan','+Rs.'+fmt(amt),true);showToast('Loan Rs.'+fmt(amt)+' received!');refreshUI();renderFin();save();
+}
+function watchAd(){
+  if(AD_LEFT<=0){showToast('No more ads today!');return;}
+  showRewAd(function(){AD_LEFT--;G.cash+=10000;addTx('Ad Reward','+Rs.10,000',true);showToast('Rs.10,000 added to cash!');refreshUI();renderFin();save();});
+}
+
+function renderUpg(){
+  document.getElementById('upg-list').innerHTML=UPGRADES.map(function(u){
+    var own=G.owned.indexOf(u.id)>-1,can=G.cash>=u.cost;
+    return '<div style="background:var(--card);border:1px solid '+(own?'rgba(0,245,160,.3)':'rgba(255,255,255,.07)')+';border-radius:16px;padding:14px;margin-bottom:2px;position:relative;">'+
+      (own?'<div style="position:absolute;top:0;right:0;background:rgba(0,245,160,.15);color:var(--p);font-size:10px;font-weight:700;font-family:Rajdhani;padding:4px 12px;border-radius:0 16px 0 10px;">✅ ACTIVE</div>':'')+
+      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">'+
+        '<div style="width:46px;height:46px;border-radius:12px;background:'+(own?'rgba(0,245,160,.15)':'rgba(255,255,255,.06)')+';display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">'+u.icon+'</div>'+
+        '<div style="flex:1;"><div style="font-family:\'Exo 2\';font-weight:800;font-size:14px;color:'+(own?'var(--p)':'#fff')+';">'+u.nm+'</div><div style="font-size:12px;color:var(--t2);margin-top:2px;">'+u.desc+'</div></div>'+
+      '</div>'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;">'+
+        '<div style="font-family:Rajdhani;font-size:13px;font-weight:700;color:'+(can&&!own?'var(--p)':'var(--t2)')+';">Rs.'+fmt(u.cost)+'</div>'+
+        (own?'<div style="font-size:12px;color:var(--p);font-family:Rajdhani;font-weight:700;">ACTIVE ✓</div>'
+            :'<button onclick="buyUpg(\''+u.id+'\')" style="background:'+(can?'linear-gradient(135deg,var(--p),var(--pd))':'rgba(255,255,255,.06)')+';color:'+(can?'#000':'rgba(255,255,255,.3)')+';border:none;padding:9px 18px;border-radius:11px;font-size:12px;font-weight:800;cursor:'+(can?'pointer':'not-allowed')+';font-family:Rajdhani;">'+(can?'BUY NOW':'NEED MORE CASH')+'</button>')+
+      '</div></div>';
+  }).join('');
+}
+function buyUpg(id){
+  var u=UPGRADES.find(function(x){return x.id===id;});if(!u)return;
+  if(G.owned.indexOf(id)>-1){showToast('Already owned!');return;}
+  if(G.cash<u.cost){showToast('Need Rs.'+fmt(u.cost));return;}
+  G.cash-=u.cost;G.owned.push(id);
+  addTx(u.nm,'-Rs.'+fmt(u.cost),false);
+  u.fn();refreshUI();renderUpg();save();
+}
+
+function openEndDay(){
+  var lp=G.loan?G.loan.daily:0,net=G.tr-4000-lp,ca=G.cash-4000-lp;
+  document.getElementById('ed-day').textContent=G.day;
+  document.getElementById('ed-nday').textContent=G.day+1;
+  document.getElementById('ed-sales').textContent=G.ts;
+  document.getElementById('ed-rev').textContent='Rs.'+fmt(G.tr);
+  document.getElementById('ed-net').textContent=(net>=0?'+':'')+' Rs.'+fmt(net);
+  document.getElementById('ed-net').style.color=net>=0?'var(--p)':'var(--red)';
+  document.getElementById('ed-cash').textContent='Rs.'+fmt(Math.max(0,ca));
+  var lr=document.getElementById('ed-loan-row');
+  if(G.loan){lr.style.display='flex';document.getElementById('ed-loan-amt').textContent='-Rs.'+fmt(lp);}else lr.style.display='none';
+  document.getElementById('ov-endday').style.display='flex';
+}
+function nextDay(){
+  document.getElementById('ov-endday').style.display='none';
+  G.cash-=4000;addTx('Daily Expenses','-Rs.4,000',false);
+  if(G.loan){G.cash-=G.loan.daily;G.loan.rem-=G.loan.daily;G.loan.days--;addTx('Loan Payment','-Rs.'+fmt(G.loan.daily),false);if(G.loan.days<=0){G.loan=null;showToast('Loan paid off!');}}
+  if(G.cash<=0){G.cash=0;gameOver();return;}
+  G.day++;G.ts=0;G.tr=0;AD_LEFT=5;
+  genCusts();genEvent();switchTab('show');refreshUI();save();
+  showToast('Day '+G.day+' started!');
+}
+function gameOver(){
+  var b=parseInt(localStorage.getItem('bk-best')||'0');if(G.day>b)localStorage.setItem('bk-best',G.day);
+  localStorage.removeItem('bk-save');
+  document.getElementById('go-days').textContent=G.day;
+  document.getElementById('go-sales').textContent=G.sales;
+  document.getElementById('go-rev').textContent='Rs.'+fmt(G.rev);
+  go('pg-over');
+}
+
+function fmt(n){return Math.round(n).toLocaleString('en-PK');}
+function addTx(l,a,p){G.tx.push({l:l,a:a,p:p,d:G.day});}
+var TOAST_T=null;
+function showToast(m){var t=document.getElementById('toast');t.textContent=m;t.style.display='block';clearTimeout(TOAST_T);TOAST_T=setTimeout(function(){t.style.display='none';},3000);}
+function floatCoin(a){var e=document.createElement('div');e.textContent='+Rs.'+fmt(a);e.style.cssText='position:fixed;top:30%;left:50%;font-weight:900;font-size:20px;color:var(--p);font-family:Exo 2;pointer-events:none;z-index:9999;animation:floatUp 1s ease forwards;';document.body.appendChild(e);setTimeout(function(){e.remove();},1100);}
+function soldStamp(){var e=document.createElement('div');e.textContent='SOLD!';e.style.cssText='position:fixed;top:35%;left:50%;font-weight:900;font-size:36px;color:var(--red);border:3px solid var(--red);padding:4px 14px;border-radius:6px;pointer-events:none;z-index:9999;animation:stamp .5s ease forwards;';document.body.appendChild(e);setTimeout(function(){e.remove();},1500);}
+
+var adSt={last:0};
+function showInterAd(cb){var n=Date.now();if(n-adSt.last<60000){if(cb)cb();return;}adSt.last=n;var ov=makeAdOv('ADVERTISEMENT','📱','Sponsored Content','Real ads show in published app',5,false,cb);document.body.appendChild(ov);}
+function showRewAd(cb){var ov=makeAdOv('REWARDED AD','🎁','Watch to Earn!','You receive Rs.10,000 bonus!',15,true,cb);document.body.appendChild(ov);}
+function makeAdOv(title,icon,head,sub,secs,rew,cb){
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  ov.innerHTML='<div style="background:var(--card);border:1px solid rgba(0,245,160,.3);border-radius:18px;padding:28px;text-align:center;max-width:300px;width:90%;">'+
+    '<p style="color:var(--t2);font-size:11px;margin-bottom:10px;">'+title+'</p>'+
+    '<div style="font-size:48px;margin-bottom:10px;">'+icon+'</div>'+
+    '<p style="color:'+(rew?'var(--gold)':'var(--p)')+';font-weight:700;font-size:16px;margin-bottom:4px;">'+head+'</p>'+
+    '<p style="color:var(--t2);font-size:12px;margin-bottom:14px;">'+sub+'</p>'+
+    '<div id="ad-n" style="font-size:32px;font-weight:900;color:'+(rew?'var(--gold)':'#fff')+';margin-bottom:10px;">'+secs+'</div>'+
+    (rew?'<div style="background:rgba(255,255,255,.06);border-radius:4px;height:5px;margin-bottom:14px;overflow:hidden;"><div id="ad-bar" style="height:100%;background:var(--gold);border-radius:4px;width:100%;"></div></div>':'')+
+    '<button id="ad-btn" disabled style="background:#374151;color:#888;border:none;padding:12px;border-radius:10px;font-weight:800;cursor:not-allowed;width:100%;font-family:Rajdhani;">'+(rew?'Watching...':'Skip Ad')+'</button>'+
+  '</div>';
+  document.body.appendChild(ov);
+  var s=secs,ti=setInterval(function(){
+    s--;var n=document.getElementById('ad-n'),bar=document.getElementById('ad-bar'),btn=document.getElementById('ad-btn');
+    if(n)n.textContent=s;if(bar)bar.style.width=(s/secs*100)+'%';
+    if(s<=0){clearInterval(ti);if(btn){btn.disabled=false;btn.style.background=rew?'var(--gold)':'var(--p)';btn.style.color='#000';btn.style.cursor='pointer';btn.textContent=rew?'Claim Rs.10,000!':'Close';btn.onclick=function(){ov.remove();if(cb)cb();};}}
+  },1000);
+  return ov;
+}
+</script>
+</body>
+</html>
