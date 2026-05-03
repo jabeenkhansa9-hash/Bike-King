@@ -2,21 +2,25 @@
   "name": "Bike King",
   "short_name": "Bike King",
   "description": "Bike King Racing Game",
+  "id": "/Bike-King/",
   "start_url": "/Bike-King/",
+  "scope": "/Bike-King/",
   "display": "fullscreen",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#07080f",
+  "theme_color": "#00f5a0",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "https://jabeenkhansa9-hash.github.io/Bike-King/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "https://jabeenkhansa9-hash.github.io/Bike-King/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
